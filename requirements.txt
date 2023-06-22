@@ -1,0 +1,9 @@
+flask
+flask_cor
+requests
+bs4
+urllib
+logging
+functools
+time
+pymongo
