@@ -48,10 +48,10 @@ def imageDump():
         searchString = request.form['content'].replace(" ","")
         app.logger.info(request.form['content'])        
         app.logger.info(searchString)
-        search_url = "https://www.google.com/search?q=" + searchString
+        num_images=30
+        search_url = f"https://www.google.com/search?q={searchString}&tbm=isch&num={num_images}"
         req = urllib.request.Request(url=search_url,headers=headers)
         logging.info("Image search link ----->" + str(search_url))
-
 
         try:
             searchResult = uReq(req)
@@ -59,7 +59,8 @@ def imageDump():
             searchResustBs = bs(searchResult,'html.parser')
             images = searchResustBs.find_all('img')
             img_links = [link['src'] for link in images]
-            
+            logging.info("Image links extracted ----->" )
+            logging.info(img_links)
             imageDumpList = []
             for i,img_link in enumerate(img_links):
                 try:
@@ -88,50 +89,16 @@ def imageDump():
                 except Exception as e:
                     logging.error("Push to MongoDB failed with error ----->")
                     logging.error(e)
-                    
-
-
-
-
-
-
-
-
-
+            message = 'Images scraped successfully!'
+            return render_template('result.html',msg=message)
         except Exception as e:
             message ='Something went wrong!'
             logging.error(message)
             logging.error(e)
-            return render_template('result.html',msg=message)
-
-        mongo_client = connectMongo()
-        for product in product_Links:
-            logging.info("Product parser---> {}".format(product))
-            product_review = {}
-            result = get_customer_reviews(product)
-            if result is not None:
-                product, customer_rev_boxes = result
-                if customer_rev_boxes is not None:
-                    customer_review_list = get_customer_details(product,customer_rev_boxes)
-                    if customer_review_list is not None:
-                        product_review_list = product_review_list + customer_review_list
-        scraper_db = mongo_client['scraper_db']
-        amazon_collection = scraper_db['amazon_collection']
-        final_result = {"searchString" : searchString,
-                        "product_review_list" : product_review_list
-                        }
-        logging.info("Push to mongoDB intiated")
-        try:
-            amazon_collection.insert_one(final_result)
-        except Exception as e:
-            logging.error(e)
-        logging.info("Push to mongoDB completed")
-        logging.info("log my final result {}".format(product_review_list))
-        logging.shutdown()
-        return render_template('result.html',reviews= product_review_list)
+            return render_template('result.html',msg=message)   
     else:
         return render_template('index.html')
 
 
 if __name__=="__main__":
-    app.run(host="0.0.0.0",debug=True)
+    app.run(host="0.0.0.0",debug=True,port=8000)
