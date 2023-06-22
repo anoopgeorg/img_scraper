@@ -1,9 +1,5 @@
 flask
-flask_cor
+flask_cors
 requests
 bs4
-urllib
-logging
-functools
-time
 pymongo
